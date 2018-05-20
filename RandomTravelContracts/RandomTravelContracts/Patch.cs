@@ -9,6 +9,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 
@@ -18,18 +19,12 @@ namespace RandomTravelContracts {
 
         static bool Prefix(SimGameState __instance) {
             try {
-                Logger.LogLine("Start");
                 __instance.CurSystem.RefreshSystem();
                 if (__instance.UXAttached) {
                     __instance.RoomManager.ShipRoom.RefreshData();
                 }
-                Logger.LogLine("BeforeInvoke");
                 ReflectionHelper.InvokePrivateMethode(__instance, "SetReputation", new object[] { Faction.Owner, __instance.CurSystem.OwnerReputation, StatCollection.StatOperation.Set, null });
-                Logger.LogLine("AfterInvoke");
-                List<StarSystem> travels = __instance.StarSystems;
-                travels.Shuffle<StarSystem>();
-                __instance.GeneratePotentialContracts(true, null, travels[0], false);
-                Logger.LogLine("End");
+
                 return false;
             }
             catch (Exception e) {
@@ -63,6 +58,29 @@ namespace RandomTravelContracts {
             }
         }
     }
+    [HarmonyPatch(typeof(StarSystem), "GenerateInitialContracts")]
+    public static class StarSystem_GenerateInitialContracts {
+
+        static bool Prefix(StarSystem __instance, Action onContractsFetched = null) {
+            try {
+                ReflectionHelper.SetPrivateField(__instance, "contractRetrievalCallback", onContractsFetched);
+
+                __instance.Sim.GeneratePotentialContracts(true, null, null, true);
+
+                Action action = (Action)Delegate.CreateDelegate(typeof(Action), __instance, "OnInitialContractFetched");
+                List<StarSystem> travels = __instance.Sim.StarSystems;
+                travels.Shuffle<StarSystem>();
+                __instance.Sim.GeneratePotentialContracts(true, action , travels[0], true);
+
+                return false;
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return false;
+            }
+        }
+    }
+
 
     [HarmonyPatch(typeof(SimGameState), "GeneratePotentialContracts")]
     public static class SimGameState_GeneratePotentialContracts {
