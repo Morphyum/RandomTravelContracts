@@ -7,7 +7,7 @@ namespace RandomTravelContracts {
 
         public static Settings LoadSettings() {
             try {
-                using (StreamReader r = new StreamReader("mods/InnerSphereMap/settings.json")) {
+                using (StreamReader r = new StreamReader($"{RandomTravelContracts.ModDirectory}/settings.json")) {
                     string json = r.ReadToEnd();
                     return JsonConvert.DeserializeObject<Settings>(json);
                 }
