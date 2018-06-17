@@ -1,0 +1,12 @@
+{
+    "Name": "RandomTravelContracts",
+    "Enabled": true,
+
+    "Version": "0.2.0",
+    "Description": "Travel Contracts go to a random planet now",
+    "Author": "Morphyum",
+    "Website": "https://github.com/Morphyum/RandomTravelContracts",
+    "Contact": "",
+	
+	"DLL": "RandomTravelContracts.dll",
+}
