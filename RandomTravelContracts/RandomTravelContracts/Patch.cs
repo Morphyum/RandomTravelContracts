@@ -98,13 +98,16 @@ namespace RandomTravelContracts {
         }
 
         private static IEnumerator StartGeneratePotentialContractsRoutine(SimGameState instance, bool clearExistingContracts, Action onContractGenComplete, StarSystem systemOverride, bool useCoroutine) {
+
             if (useCoroutine) {
                 yield return new WaitForSeconds(0.2f);
             }
+            Logger.LogLine("Contract Gen Start");
             bool usingBreadcrumbs = systemOverride != null;
             StarSystem system;
             List<Contract> contractList;
             if (systemOverride != null) {
+                Logger.LogLine("Travel");
                 system = systemOverride;
                 contractList = instance.CurSystem.SystemBreadcrumbs;
             }
@@ -118,17 +121,21 @@ namespace RandomTravelContracts {
             int maxContracts;
             if (systemOverride != null) {
                 maxContracts = instance.CurSystem.CurMaxBreadcrumbs;
+
             }
             else {
                 maxContracts = Mathf.CeilToInt(system.CurMaxContracts);
             }
 
             int debugCount = 0;
+            Logger.LogLine("Max contracts: " + maxContracts);
             while (contractList.Count < maxContracts && debugCount < 1000) {
                 if (usingBreadcrumbs) {
+                    
                     List<StarSystem> listsys = instance.StarSystems;
                     listsys.Shuffle<StarSystem>();
                     system = listsys[0];
+                    Logger.LogLine(system.Name);
                 }
                 int globalDifficulty = system.Def.Difficulty + Mathf.FloorToInt(instance.GlobalDifficulty);
                 int minDiff;
@@ -145,6 +152,7 @@ namespace RandomTravelContracts {
                 Dictionary<ContractType, List<ContractOverride>> potentialOverrides = new Dictionary<ContractType, List<ContractOverride>>();
                 ContractType[] singlePlayerTypes = (ContractType[])ReflectionHelper.GetPrivateStaticField(typeof(SimGameState), "singlePlayerTypes");
                 using (MetadataDatabase metadataDatabase = new MetadataDatabase()) {
+                    Logger.LogLine("Meta start ");
                     foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRangeAndScope((int)minDiffClamped, (int)maxDiffClamped, instance.ContractScope)) {
                         ContractType contractType = contract_MDD.ContractTypeEntry.ContractType;
 
@@ -166,14 +174,14 @@ namespace RandomTravelContracts {
                     }
                 }
                 if (contractMaps.Count == 0) {
-                    Debug.LogError(string.Format("No valid map for System {0}", system.Name));
+                    Logger.LogLine(string.Format("No valid map for System {0}", system.Name));
                     if (onContractGenComplete != null) {
                         onContractGenComplete();
                     }
                     yield break;
                 }
                 if (potentialOverrides.Count == 0) {
-                    Debug.LogError(string.Format("No valid contracts queried for difficulties between {0} and {1}, with a SCOPE of {2}", minDiffClamped, maxDiffClamped, instance.ContractScope));
+                    Logger.LogLine(string.Format("No valid contracts queried for difficulties between {0} and {1}, with a SCOPE of {2}", minDiffClamped, maxDiffClamped, instance.ContractScope));
                     if (onContractGenComplete != null) {
                         onContractGenComplete();
                     }
@@ -202,12 +210,12 @@ namespace RandomTravelContracts {
                 validEmployers.Reset(false);
 
                 if (validEmployers.Count <= 0 || validTargets.Count <= 0) {
-                    Debug.LogError(string.Format("Cannot find any valid employers or targets for system {0}", system));
+                    Logger.LogLine(string.Format("Cannot find any valid employers or targets for system {0}", system));
                 }
                 if (validTargets.Count == 0 || validEmployers.Count == 0) {
-                    SimGameState.logger.LogError(string.Format("There are no valid employers or employers for the system of {0}. Num valid employers: {1}", system.Name, validEmployers.Count));
+                    Logger.LogLine(string.Format("There are no valid employers or employers for the system of {0}. Num valid employers: {1}", system.Name, validEmployers.Count));
                     foreach (Faction faction3 in validTargets.Keys) {
-                        SimGameState.logger.LogError(string.Format("--- Targets for {0}: {1}", faction3, validTargets[faction3].Count));
+                        Logger.LogLine(string.Format("--- Targets for {0}: {1}", faction3, validTargets[faction3].Count));
                     }
                     if (onContractGenComplete != null) {
                         onContractGenComplete();
@@ -344,7 +352,7 @@ namespace RandomTravelContracts {
                     }
                     else {
                         debugCount = 1000;
-                        SimGameState.logger.LogError(string.Format("[CONTRACT] Unable to find any valid contracts for available map pool. Alert designers.", new object[0]));
+                        Logger.LogLine(string.Format("[CONTRACT] Unable to find any valid contracts for available map pool. Alert designers.", new object[0]));
                     }
                 }
                 else {
@@ -398,7 +406,7 @@ namespace RandomTravelContracts {
                 }
             }
             if (debugCount >= 1000) {
-                SimGameState.logger.LogError("Unable to fill contract list. Please inform AJ Immediately");
+                Logger.LogLine("Unable to fill contract list. Please inform AJ Immediately");
             }
             if (onContractGenComplete != null) {
                 onContractGenComplete();
