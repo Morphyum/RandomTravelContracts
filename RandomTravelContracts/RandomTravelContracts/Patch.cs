@@ -107,7 +107,6 @@ namespace RandomTravelContracts {
             StarSystem system;
             List<Contract> contractList;
             if (systemOverride != null) {
-                Logger.LogLine("Travel");
                 system = systemOverride;
                 contractList = instance.CurSystem.SystemBreadcrumbs;
             }
@@ -128,7 +127,6 @@ namespace RandomTravelContracts {
             }
 
             int debugCount = 0;
-            Logger.LogLine("Max contracts: " + maxContracts);
             while (contractList.Count < maxContracts && debugCount < 1000) {
                 if (usingBreadcrumbs) {
                     
@@ -152,7 +150,6 @@ namespace RandomTravelContracts {
                 Dictionary<ContractType, List<ContractOverride>> potentialOverrides = new Dictionary<ContractType, List<ContractOverride>>();
                 ContractType[] singlePlayerTypes = (ContractType[])ReflectionHelper.GetPrivateStaticField(typeof(SimGameState), "singlePlayerTypes");
                 using (MetadataDatabase metadataDatabase = new MetadataDatabase()) {
-                    Logger.LogLine("Meta start ");
                     foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRangeAndScope((int)minDiffClamped, (int)maxDiffClamped, instance.ContractScope)) {
                         ContractType contractType = contract_MDD.ContractTypeEntry.ContractType;
 
