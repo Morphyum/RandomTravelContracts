@@ -1,7 +1,6 @@
 ﻿using BattleTech;
 using BattleTech.Data;
 using BattleTech.Framework;
-using BattleTech.UI;
 using Harmony;
 using HBS;
 using HBS.Collections;
@@ -9,8 +8,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using TMPro;
 using UnityEngine;
 
 namespace RandomTravelContracts {
@@ -24,7 +21,7 @@ namespace RandomTravelContracts {
                     __instance.RoomManager.ShipRoom.RefreshData();
                 }
                 ReflectionHelper.InvokePrivateMethode(__instance, "SetReputation", new object[] { Faction.Owner, __instance.CurSystem.OwnerReputation, StatCollection.StatOperation.Set, null });
-
+                Fields.currBorderCons = 0;
                 return false;
             }
             catch (Exception e) {
@@ -102,7 +99,6 @@ namespace RandomTravelContracts {
             if (useCoroutine) {
                 yield return new WaitForSeconds(0.2f);
             }
-            Logger.LogLine("Contract Gen Start");
             bool usingBreadcrumbs = systemOverride != null;
             StarSystem system;
             List<Contract> contractList;
@@ -129,11 +125,19 @@ namespace RandomTravelContracts {
             int debugCount = 0;
             while (contractList.Count < maxContracts && debugCount < 1000) {
                 if (usingBreadcrumbs) {
-                    
                     List<StarSystem> listsys = instance.StarSystems;
-                    listsys.Shuffle<StarSystem>();
-                    system = listsys[0];
-                    Logger.LogLine(system.Name);
+                    listsys.Shuffle();
+                    if (Fields.currBorderCons < maxContracts * Fields.settings.percentageOfTravelOnBorder) {
+                        int sysNr = 0;
+                        while (!Helper.IsBorder(listsys[sysNr], instance)) {
+                            sysNr++;
+                        }
+                        system = listsys[sysNr];
+                        Fields.currBorderCons++;
+                    }
+                    else {
+                        system = listsys[0];
+                    }
                 }
                 int globalDifficulty = system.Def.Difficulty + Mathf.FloorToInt(instance.GlobalDifficulty);
                 int minDiff;
