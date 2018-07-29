@@ -123,9 +123,15 @@ namespace RandomTravelContracts {
             }
 
             int debugCount = 0;
+            List<StarSystem> AllSystems = new List<StarSystem>();
+            foreach(StarSystem addsystem in instance.StarSystems) {
+                if(addsystem.Owner != Faction.NoFaction) {
+                    AllSystems.Add(addsystem);
+                }
+            }
             while (contractList.Count < maxContracts && debugCount < 1000) {
                 if (usingBreadcrumbs) {
-                    List<StarSystem> listsys = instance.StarSystems;
+                    List<StarSystem> listsys = AllSystems;
                     listsys.Shuffle();
                     if (Fields.currBorderCons < maxContracts * Fields.settings.percentageOfTravelOnBorder) {
                         int sysNr = 0;
@@ -211,7 +217,7 @@ namespace RandomTravelContracts {
                 validEmployers.Reset(false);
 
                 if (validEmployers.Count <= 0 || validTargets.Count <= 0) {
-                    Logger.LogLine(string.Format("Cannot find any valid employers or targets for system {0}", system));
+                    Logger.LogLine(string.Format("Cannot find any valid employers or targets for system {0}", system.Name));
                 }
                 if (validTargets.Count == 0 || validEmployers.Count == 0) {
                     Logger.LogLine(string.Format("There are no valid employers or employers for the system of {0}. Num valid employers: {1}", system.Name, validEmployers.Count));
