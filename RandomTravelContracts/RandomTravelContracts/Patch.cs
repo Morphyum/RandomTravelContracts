@@ -206,7 +206,9 @@ namespace RandomTravelContracts {
                             if (!validTargets.ContainsKey(faction)) {
                                 validTargets.Add(faction, new WeightedList<Faction>(WeightedListType.PureRandom, null, null, 0));
                             }
-                            validTargets[faction].Add(faction2, 0);
+                            if (!validTargets[faction].Contains(faction2)) {
+                                validTargets[faction].Add(faction2, 0);
+                            }
                         }
                     }
                     if (validTargets.ContainsKey(faction)) {
