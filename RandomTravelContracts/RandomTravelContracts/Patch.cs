@@ -20,7 +20,7 @@ namespace RandomTravelContracts {
                 if (__instance.UXAttached) {
                     __instance.RoomManager.ShipRoom.RefreshData();
                 }
-                ReflectionHelper.InvokePrivateMethode(__instance, "SetReputation", new object[] { Faction.Owner, __instance.CurSystem.OwnerReputation, StatCollection.StatOperation.Set, null });
+                __instance.SetReputation(Faction.Owner, __instance.CurSystem.OwnerReputation, StatCollection.StatOperation.Set, null);
                 Fields.currBorderCons = 0;
                 return false;
             }
@@ -95,7 +95,6 @@ namespace RandomTravelContracts {
         }
 
         private static IEnumerator StartGeneratePotentialContractsRoutine(SimGameState instance, bool clearExistingContracts, Action onContractGenComplete, StarSystem systemOverride, bool useCoroutine) {
-
             if (useCoroutine) {
                 yield return new WaitForSeconds(0.2f);
             }
@@ -145,7 +144,13 @@ namespace RandomTravelContracts {
                         system = listsys[0];
                     }
                 }
-                int globalDifficulty = system.Def.Difficulty + Mathf.FloorToInt(instance.GlobalDifficulty);
+                int globalDifficulty = system.Def.GetDifficulty(instance.SimGameMode) + Mathf.FloorToInt(instance.GlobalDifficulty);
+                if (globalDifficulty <= 1) {
+                    globalDifficulty = 2;
+                }
+                else if (globalDifficulty > 9) {
+                    globalDifficulty = 9;
+                }
                 int minDiff;
                 int maxDiff;
 
@@ -160,7 +165,7 @@ namespace RandomTravelContracts {
                 Dictionary<ContractType, List<ContractOverride>> potentialOverrides = new Dictionary<ContractType, List<ContractOverride>>();
                 ContractType[] singlePlayerTypes = (ContractType[])ReflectionHelper.GetPrivateStaticField(typeof(SimGameState), "singlePlayerTypes");
                 using (MetadataDatabase metadataDatabase = new MetadataDatabase()) {
-                    foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRangeAndScope((int)minDiffClamped, (int)maxDiffClamped, instance.ContractScope)) {
+                    foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRangeAndScopeAndOwnership((int)minDiffClamped, (int)maxDiffClamped, instance.ContractScope, true)) {
                         ContractType contractType = contract_MDD.ContractTypeEntry.ContractType;
 
                         if (singlePlayerTypes.Contains(contractType)) {
@@ -199,7 +204,6 @@ namespace RandomTravelContracts {
                 Dictionary<Faction, WeightedList<Faction>> validTargets = new Dictionary<Faction, WeightedList<Faction>>();
 
                 Dictionary<Faction, FactionDef> factions = (Dictionary<Faction, FactionDef>)ReflectionHelper.GetPrivateField(instance, "factions");
-
                 foreach (Faction faction in system.Def.ContractEmployers) {
                     foreach (Faction faction2 in factions[faction].Enemies) {
                         if (system.Def.ContractTargets.Contains(faction2)) {
@@ -213,7 +217,9 @@ namespace RandomTravelContracts {
                     }
                     if (validTargets.ContainsKey(faction)) {
                         validTargets[faction].Reset(false);
-                        validEmployers.Add(faction, 0);
+                        if (!validEmployers.Contains(faction)) {
+                            validEmployers.Add(faction, 0);
+                        }
                     }
                 }
                 validEmployers.Reset(false);
@@ -279,7 +285,14 @@ namespace RandomTravelContracts {
                                     Faction employer2 = Faction.INVALID_UNSET;
                                     Faction target2 = Faction.INVALID_UNSET;
                                     object[] args = new object[] { system, validEmployers, validTargets, contractOverride2.requirementList, employer2, target2 };
-                                    if (difficultyEnumFromValue >= minDiffClamped && difficultyEnumFromValue <= maxDiffClamped && (bool)ReflectionHelper.InvokePrivateMethode(instance, "GetValidFaction", args)) {
+                                    bool validFaction = false;
+                                    try {
+                                         validFaction = (bool)ReflectionHelper.InvokePrivateMethode(instance, "GetValidFaction", args);
+                                    }
+                                    catch(Exception e) {
+                                        Logger.LogLine("GetValidFaction failed for: "+ contractOverride2.ID);
+                                    }    
+                                    if (difficultyEnumFromValue >= minDiffClamped && difficultyEnumFromValue <= maxDiffClamped && validFaction) {
                                         employer2 = (Faction)args[4];
                                         target2 = (Faction)args[5];
                                         int difficulty = instance.NetworkRandom.Int(minDiff, maxDiff + 1);
