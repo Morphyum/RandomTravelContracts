@@ -134,8 +134,15 @@ namespace RandomTravelContracts {
                     listsys.Shuffle();
                     if (Fields.currBorderCons < maxContracts * Fields.settings.percentageOfTravelOnBorder) {
                         int sysNr = 0;
-                        while (!Helper.IsBorder(listsys[sysNr], instance)) {
-                            sysNr++;
+                        if (Fields.settings.warBorders) {
+                            while (!Helper.IsWarBorder(listsys[sysNr], instance)) {
+                                sysNr++;
+                            }
+                        }
+                        else {
+                            while (!Helper.IsBorder(listsys[sysNr], instance)) {
+                                sysNr++;
+                            }
                         }
                         system = listsys[sysNr];
                         Fields.currBorderCons++;
@@ -412,7 +419,12 @@ namespace RandomTravelContracts {
                     int targetDifficulty = next.difficulty;
                     Contract con;
                     if (usingBreadcrumbs) {
-
+                        if(employer3 == Faction.Locals) {
+                            employer3 = system.Owner;
+                            if(target3 == employer3) {
+                                target3 = Faction.Locals;
+                            }
+                        }
                         con = (Contract)ReflectionHelper.InvokePrivateMethode(instance, "CreateTravelContract", new object[] { level.Map.MapName, level.Map.MapPath, encounterGuid, finalContractType, contractOverride3, gameContext, employer3, target3, employer3, false, targetDifficulty });
                     }
                     else {

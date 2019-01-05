@@ -5,6 +5,7 @@ namespace RandomTravelContracts {
 
     public class Settings {
         public float percentageOfTravelOnBorder = 0.5f;
+        public bool warBorders = false;
     }
 
     public static class Fields {

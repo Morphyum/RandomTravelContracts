@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace RandomTravelContracts {
     public class Helper {
@@ -27,6 +28,28 @@ namespace RandomTravelContracts {
                         if (system.Owner != neigbourSystem.Owner) {
                             result = true;
                             break;
+                        }
+                    }
+                }
+                return result;
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex);
+                return false;
+            }
+        }
+
+        public static bool IsWarBorder(StarSystem system, SimGameState Sim) {
+            try {
+                FactionDef factiondef = Sim.FactionsDict[system.Owner];
+                bool result = false;
+                if (Sim.Starmap != null) {
+                    if (system.Owner != Faction.NoFaction) {
+                        foreach (StarSystem neigbourSystem in Sim.Starmap.GetAvailableNeighborSystem(system)) {
+                            if (factiondef.Enemies.Contains(neigbourSystem.Owner) && neigbourSystem.Owner != Faction.NoFaction) {
+                                result = true;
+                                break;
+                            }
                         }
                     }
                 }
