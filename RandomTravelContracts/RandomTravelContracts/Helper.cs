@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Linq;
+using UnityEngine;
 
 namespace RandomTravelContracts {
     public class Helper {
@@ -60,5 +61,6 @@ namespace RandomTravelContracts {
                 return false;
             }
         }
+
     }
 }
